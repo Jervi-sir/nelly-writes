@@ -1,0 +1,188 @@
+### Mode
+
+You are working in **Hardcoded Data Mode**.
+**DO NOT** connect to a database, ORM, or backend.
+
+All data must be:
+
+* stored in local TypeScript files
+* treated as mock data
+* easily replaceable later with Drizzle + PostgreSQL
+
+---
+
+## Data Source Rules (MANDATORY)
+
+1. Create a file:
+
+```
+/src/data/mockLibrary.ts
+```
+
+2. Export **plain TypeScript objects only**
+3. No async calls
+4. No API routes
+5. No persistence (no localStorage)
+
+---
+
+## Data Models (STRICT)
+
+```ts
+export type ReadingStatus =
+  | "wishlist"
+  | "owned"
+  | "reading"
+  | "paused"
+  | "finished"
+  | "abandoned";
+
+export interface Book {
+  id: string;
+  title: string;
+  author?: string;
+  coverUrl?: string;
+  description?: string;
+}
+
+export interface LibraryBook {
+  id: string;
+  bookId: string;
+  status: ReadingStatus;
+  owned: boolean;
+  priority: 1 | 2 | 3 | 4 | 5;
+  rating?: 1 | 2 | 3 | 4 | 5;
+  hooked: boolean;
+  notes?: string;
+  startedAt?: string;
+  finishedAt?: string;
+}
+```
+
+---
+
+## Mock Data Requirements
+
+### Books
+
+Create **at least 8–10 books** with:
+
+* mixed authors
+* realistic titles
+* at least 2 books without ownership
+
+### Library Entries
+
+Create **1 library entry per book**, with:
+
+* different statuses
+* at least:
+
+  * 2 `wishlist`
+  * 2 `reading`
+  * 2 `finished`
+  * 1 `paused`
+  * 1 `abandoned`
+
+---
+
+## Example Mock Data Structure
+
+```ts
+export const books: Book[] = [
+  {
+    id: "b1",
+    title: "White Nights",
+    author: "Fyodor Dostoevsky",
+    coverUrl: "/covers/white-nights.jpg",
+  },
+  ...
+];
+
+export const libraryBooks: LibraryBook[] = [
+  {
+    id: "l1",
+    bookId: "b1",
+    status: "finished",
+    owned: true,
+    priority: 3,
+    rating: 5,
+    hooked: true,
+    finishedAt: "2025-01-10",
+  },
+  ...
+];
+```
+
+---
+
+## State Management Rules
+
+* Use **React `useState` only**
+* Treat data as **read-only**
+* Simulate updates by:
+
+  * copying arrays
+  * updating state locally
+* No mutations to original mock file
+
+---
+
+## UI Logic Rules
+
+* Combine data via:
+
+```ts
+const book = books.find(b => b.id === libraryBook.bookId);
+```
+
+* Filters must work exactly as final app:
+
+  * by status
+  * by owned
+  * by priority
+  * by rating
+
+---
+
+## UX Constraints (Must Enforce)
+
+* Max **2 books** can have status `"reading"`
+* Cannot rate books unless status is `"finished"`
+* Wishlist books must have `owned = false`
+* Finished books must show `finishedAt`
+
+If rules are violated:
+
+* show UI error state
+* do not update state
+
+---
+
+## File Structure Guidance
+
+```
+src/
+ ├─ data/
+ │   └─ mockLibrary.ts
+ ├─ components/
+ │   ├─ BookCard.tsx
+ │   ├─ StatusBadge.tsx
+ │   └─ RatingStars.tsx
+ ├─ pages/
+ │   ├─ Dashboard.tsx
+ │   ├─ Library.tsx
+ │   └─ Wishlist.tsx
+```
+
+---
+
+## Migration Promise (IMPORTANT)
+
+All mock data and logic must be written in a way that:
+
+* can be replaced later by TanStack Query
+* can be mapped 1:1 to Drizzle schema
+* does not leak mock-specific logic into UI components
+
+---
