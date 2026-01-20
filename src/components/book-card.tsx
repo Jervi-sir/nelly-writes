@@ -1,6 +1,6 @@
 import { StatusBadge } from "./status-badge";
 import { RatingStars } from "./rating-stars";
-import { Clock, Calendar, Bookmark, BookOpen, ChevronDown, Pen } from "lucide-react";
+import { Clock, Calendar, BookOpen, ChevronDown, Pen, Eye } from "lucide-react";
 import type { Book, LibraryBook, ReadingStatus } from "../data/mockLibrary";
 import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
@@ -34,7 +34,7 @@ const STATUS_LABELS: Record<ReadingStatus, string> = {
   abandoned: "Abandoned",
 };
 
-export function BookCard({ book, entry, onUpdateStatus, onUpdateRating, onToggleOwned, onEdit }: BookCardProps) {
+export function BookCard({ book, entry, onUpdateStatus, onUpdateRating, onEdit }: BookCardProps) {
   const isFinished = entry.status === "finished";
 
   return (
@@ -88,14 +88,14 @@ export function BookCard({ book, entry, onUpdateStatus, onUpdateRating, onToggle
           <Button
             variant="ghost"
             size="icon"
-            onClick={onToggleOwned}
+            onClick={() => onUpdateStatus("reading")}
             className={cn(
               "h-8 w-8 shrink-0 transition-colors -mr-2 -mt-2",
-              entry.owned ? "text-purple-600 bg-purple-500/10 hover:bg-purple-500/20 hover:text-purple-700" : "text-muted-foreground/50 hover:text-foreground"
+              entry.status === "reading" ? "text-blue-600 bg-blue-500/10 hover:bg-blue-500/20 hover:text-blue-700" : "text-muted-foreground/50 hover:text-foreground"
             )}
-            title={entry.owned ? "Owned" : "Mark as Owned"}
+            title={entry.status === "reading" ? "Reading" : "Mark as Reading"}
           >
-            <Bookmark className={cn("h-4 w-4", entry.owned && "fill-current")} />
+            <Eye className={cn("h-4 w-4", entry.status === "reading" && "fill-current")} />
           </Button>
         </div>
 
@@ -131,7 +131,6 @@ export function BookCard({ book, entry, onUpdateStatus, onUpdateRating, onToggle
             <RatingStars
               rating={entry.rating}
               onChange={onUpdateRating}
-              disabled={!isFinished}
             />
           </div>
 

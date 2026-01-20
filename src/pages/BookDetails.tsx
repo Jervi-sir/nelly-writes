@@ -1,9 +1,10 @@
 import { useParams, useOutletContext, useNavigate } from "react-router-dom";
 import { ArrowLeft, Star, Pen } from "lucide-react";
 import type { LibraryContextType } from "../app";
-import { Button } from "../components/ui/button";
-import { StatusBadge } from "../components/status-badge";
-import { RatingStars } from "../components/rating-stars";
+import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/status-badge";
+
+import { RatingStars } from "@/components/rating-stars";
 
 export default function BookDetails() {
   const { id } = useParams<{ id: string }>();
@@ -21,8 +22,6 @@ export default function BookDetails() {
       </div>
     );
   }
-
-  const isFinished = entry.status === "finished";
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -124,32 +123,30 @@ export default function BookDetails() {
             </p>
           </div>
 
-          {/* Notes */}
-          {entry.notes && (
-            <div className="space-y-3 pt-4 border-t border-border/50">
-              <h3 className="text-lg font-semibold">My Notes</h3>
-              <div className="bg-yellow-500/5 border border-yellow-500/20 p-4 rounded-lg text-yellow-900 dark:text-yellow-200/80 italic">
-                "{entry.notes}"
-              </div>
-            </div>
-          )}
-
-          {/* Interactive Rating (if finished) */}
-          {isFinished && (
-            <div className="pt-4 border-t border-border/50">
-              <h3 className="text-sm font-semibold mb-3">Your Rating</h3>
-              <div className="flex">
-                <RatingStars
-                  rating={entry.rating}
-                  onChange={(r) => updateRating(entry.id, r)}
-                  size={24}
-                />
-              </div>
-            </div>
-          )}
-
+          {/* Editors */}
+          {/* <div className="space-y-3 pt-4 border-t border-border/50">
+            <h3 className="text-lg font-semibold">My Notes</h3>
+            <NotesEditor
+              initialNotes={entry.richNotes || entry.notes}
+              onSave={(notes) => updateRichNotes(entry.id, notes)}
+            />
+          </div> */}
         </div>
+
+        {/* Interactive Rating (if finished) */}
+        <div className="pt-4 border-t border-border/50">
+          <h3 className="text-sm font-semibold mb-3">Your Rating</h3>
+          <div className="flex">
+            <RatingStars
+              rating={entry.rating}
+              onChange={(r) => updateRating(entry.id, r)}
+              size={24}
+            />
+          </div>
+        </div>
+
       </div>
     </div>
+
   );
 }

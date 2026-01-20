@@ -24,6 +24,7 @@ export interface LibraryBook {
   rating?: 1 | 2 | 3 | 4 | 5;
   hooked: boolean;
   notes?: string;
+  richNotes?: string;
   startedAt?: string;
   finishedAt?: string;
 }

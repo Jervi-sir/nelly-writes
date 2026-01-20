@@ -1,4 +1,4 @@
-import { pgTable, text, boolean, integer, timestamp, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, text, boolean, integer, pgEnum } from 'drizzle-orm/pg-core';
 
 // Enums
 export const statusEnum = pgEnum('status', [
@@ -35,4 +35,5 @@ export const library = pgTable('library', {
   // Actually timestamp with time zone is best practice, but for simple app date string is fine.
   // Let's use text to match the ISO string format of mock data exactly for now.
   finishedAt: text('finished_at'),
+  richNotes: text('rich_notes'),
 });

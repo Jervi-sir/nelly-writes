@@ -1,6 +1,6 @@
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { z } from "zod";
 import type { Book, LibraryBook } from "../data/mockLibrary";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
@@ -33,8 +33,8 @@ interface BookFormProps {
 }
 
 export function BookForm({ open, onOpenChange, onSubmit, initialData }: BookFormProps) {
-  const form = useForm<BookFormValues>({
-    resolver: zodResolver(formSchema),
+  const methods = useForm<BookFormValues>({
+    resolver: zodResolver(formSchema) as Resolver<BookFormValues>,
     defaultValues: {
       title: "",
       author: "",
@@ -45,12 +45,12 @@ export function BookForm({ open, onOpenChange, onSubmit, initialData }: BookForm
       owned: false,
       notes: "",
       rating: undefined
-    }
+    } as BookFormValues
   });
 
   useEffect(() => {
     if (initialData) {
-      form.reset({
+      methods.reset({
         title: initialData.book.title,
         author: initialData.book.author || "",
         description: initialData.book.description || "",
@@ -62,7 +62,7 @@ export function BookForm({ open, onOpenChange, onSubmit, initialData }: BookForm
         notes: initialData.entry.notes || ""
       });
     } else {
-      form.reset({
+      methods.reset({
         title: "",
         author: "",
         description: "",
@@ -74,12 +74,12 @@ export function BookForm({ open, onOpenChange, onSubmit, initialData }: BookForm
         rating: undefined
       });
     }
-  }, [initialData, form, open]);
+  }, [initialData, methods, open]);
 
-  const handleSubmit = (data: BookFormValues) => {
+  const onFormSubmit = (data: BookFormValues) => {
     onSubmit(data);
     onOpenChange(false);
-    form.reset();
+    methods.reset();
   };
 
   return (
@@ -92,13 +92,13 @@ export function BookForm({ open, onOpenChange, onSubmit, initialData }: BookForm
           </DialogDescription>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <Form {...methods}>
+          <form onSubmit={methods.handleSubmit((data) => onFormSubmit(data as unknown as BookFormValues))} className="space-y-6">
             <div className="flex flex-col sm:flex-row gap-6">
               {/* Left Column: Image */}
               <div className="shrink-0 flex justify-center sm:justify-start">
                 <FormField
-                  control={form.control}
+                  // control={form.control}
                   name="coverUrl"
                   render={({ field }) => (
                     <FormItem>
@@ -118,7 +118,7 @@ export function BookForm({ open, onOpenChange, onSubmit, initialData }: BookForm
               {/* Right Column: Details */}
               <div className="flex-1 space-y-4">
                 <FormField
-                  control={form.control}
+                  // control={form.control}
                   name="title"
                   render={({ field }) => (
                     <FormItem>
@@ -132,7 +132,7 @@ export function BookForm({ open, onOpenChange, onSubmit, initialData }: BookForm
                 />
 
                 <FormField
-                  control={form.control}
+                  // control={form.control}
                   name="author"
                   render={({ field }) => (
                     <FormItem>
@@ -149,7 +149,7 @@ export function BookForm({ open, onOpenChange, onSubmit, initialData }: BookForm
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
-                control={form.control}
+                // control={form.control}
                 name="status"
                 render={({ field }) => (
                   <FormItem>
@@ -176,7 +176,7 @@ export function BookForm({ open, onOpenChange, onSubmit, initialData }: BookForm
 
               <div className="flex gap-4">
                 <FormField
-                  control={form.control}
+                  // control={form.control}
                   name="priority"
                   render={({ field }) => (
                     <FormItem className="flex-1">
@@ -205,7 +205,7 @@ export function BookForm({ open, onOpenChange, onSubmit, initialData }: BookForm
             </div>
 
             <FormField
-              control={form.control}
+              // control={form.control}
               name="description"
               render={({ field }) => (
                 <FormItem>

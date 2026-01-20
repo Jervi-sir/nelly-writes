@@ -127,3 +127,27 @@ export const updateRating = async (
 
   if (error) throw error;
 };
+
+export const updateNotes = async (
+  bookId: string,
+  notes: string | null
+) => {
+  const { error } = await supabase
+    .from("library")
+    .update({ notes })
+    .eq("book_id", bookId);
+
+  if (error) throw error;
+};
+
+export const updateRichNotes = async (
+  bookId: string,
+  richNotes: string | null
+) => {
+  const { error } = await supabase
+    .from("library")
+    .update({ rich_notes: richNotes })
+    .eq("book_id", bookId);
+
+  if (error) throw error;
+};

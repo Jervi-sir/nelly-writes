@@ -18,11 +18,16 @@ export type LibraryContextType = {
   updateStatus: (id: string, status: ReadingStatus) => void;
   updateRating: (id: string, rating: 1 | 2 | 3 | 4 | 5) => void;
   updateDate: (id: string, field: "startedAt" | "finishedAt", date: string | null) => void;
+  updateNotes: (id: string, notes: string | null) => void;
+  updateRichNotes: (id: string, richNotes: string | null) => void;
   toggleOwned: (id: string) => void;
   openBookForm: (bookId?: string) => void;
 };
 
 function App() {
+  // ...
+  // ...
+
   // State
   const [books, setBooks] = useState<Book[]>([]);
   const [library, setLibrary] = useState<LibraryBook[]>([]);
@@ -57,6 +62,7 @@ function App() {
           priority: row.priority,
           rating: row.rating,
           notes: row.notes,
+          richNotes: row.rich_notes,
           hooked: row.hooked,
           startedAt: row.started_at,
           finishedAt: row.finished_at,
@@ -127,25 +133,55 @@ function App() {
     setError(null);
     setLibrary(prev => prev.map(entry => {
       if (entry.id !== id) return entry;
-
-      // Constraint: Cannot rate books unless status is finished
-      if (entry.status !== "finished") {
-        setError("You can only rate finished books.");
-        return entry;
-      }
-
       return { ...entry, rating };
     }));
 
     // Find entry to get bookId
     const entry = library.find(e => e.id === id);
-    if (!entry || entry.status !== "finished") return;
+    if (!entry) return;
 
     // API Call
     import('./services/api').then(({ updateRating }) => {
       updateRating(entry.bookId, rating).catch(err => {
         console.error("Failed to update rating:", err);
         setError("Failed to update rating.");
+      });
+    });
+  };
+
+  const updateNotes = (id: string, notes: string | null) => {
+    setError(null);
+    setLibrary(prev => prev.map(entry => {
+      if (entry.id !== id) return entry;
+      return { ...entry, notes: notes || undefined }; // undefined or null depending on type, mock says string | undefined
+    }));
+
+    // API Call
+    const entry = library.find(e => e.id === id);
+    if (!entry) return;
+
+    import('./services/api').then(({ updateNotes }) => {
+      updateNotes(entry.bookId, notes).catch(err => {
+        console.error("Failed to update notes:", err);
+        setError("Failed to update notes.");
+      });
+    });
+  };
+
+  const updateRichNotes = (id: string, richNotes: string | null) => {
+    setError(null);
+    setLibrary(prev => prev.map(entry => {
+      if (entry.id !== id) return entry;
+      return { ...entry, richNotes: richNotes || undefined };
+    }));
+
+    const entry = library.find(e => e.id === id);
+    if (!entry) return;
+
+    import('./services/api').then(({ updateRichNotes }) => {
+      updateRichNotes(entry.bookId, richNotes).catch(err => {
+        console.error("Failed to update rich notes:", err);
+        setError("Failed to update rich notes.");
       });
     });
   };
@@ -270,7 +306,9 @@ function App() {
     library,
     updateStatus,
     updateRating,
-    updateDate, // Add this
+    updateDate,
+    updateNotes,
+    updateRichNotes,
     toggleOwned,
     openBookForm
   };

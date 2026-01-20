@@ -8,6 +8,13 @@
       "when": 1768863486476,
       "tag": "0000_petite_deadpool",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1768870617316,
+      "tag": "0001_wandering_dazzler",
+      "breakpoints": true
     }
   ]
 }
