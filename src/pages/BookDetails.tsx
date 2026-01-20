@@ -1,5 +1,5 @@
 import { useParams, useOutletContext, useNavigate } from "react-router-dom";
-import { ArrowLeft, Star, Pen } from "lucide-react";
+import { ArrowLeft, Star, Pen, Trash2 } from "lucide-react";
 import type { LibraryContextType } from "../app";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
@@ -9,7 +9,7 @@ import { RatingStars } from "@/components/rating-stars";
 export default function BookDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { books, library, updateRating, updateDate, openBookForm } = useOutletContext<LibraryContextType>();
+  const { books, library, updateRating, updateDate, openBookForm, deleteBook } = useOutletContext<LibraryContextType>();
 
   const book = books.find(b => b.id === id);
   const entry = library.find(e => e.bookId === id);
@@ -53,6 +53,17 @@ export default function BookDetails() {
           <div className="space-y-2">
             <Button className="w-full" variant="outline" onClick={() => openBookForm(book.id)}>
               <Pen className="mr-2 h-4 w-4" /> Edit Details
+            </Button>
+
+            <Button
+              className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+              variant="outline"
+              onClick={() => {
+                deleteBook(book.id);
+                navigate(-1);
+              }}
+            >
+              <Trash2 className="mr-2 h-4 w-4" /> Delete Book
             </Button>
 
             {/* Status Select could go here or just badge */}

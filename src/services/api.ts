@@ -72,7 +72,7 @@ export const updateBookAndEntry = async (
   if (bookError) throw bookError;
 
   // 2. Update Library Entry
-  const updates: any = {
+  const updates: Record<string, unknown> = {
     status: data.status,
     owned: data.owned,
     priority: data.priority,
@@ -150,4 +150,21 @@ export const updateRichNotes = async (
     .eq("book_id", bookId);
 
   if (error) throw error;
+};
+export const deleteBookAndEntry = async (bookId: string) => {
+  // 1. Delete Library Entry first (due to foreign key usually)
+  const { error: libraryError } = await supabase
+    .from("library")
+    .delete()
+    .eq("book_id", bookId);
+
+  if (libraryError) throw libraryError;
+
+  // 2. Delete Book
+  const { error: bookError } = await supabase
+    .from("books")
+    .delete()
+    .eq("id", bookId);
+
+  if (bookError) throw bookError;
 };

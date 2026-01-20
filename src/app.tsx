@@ -9,7 +9,7 @@ import BookDetails from './pages/BookDetails';
 import type { ReadingStatus, LibraryBook, Book } from './data/mockLibrary';
 import { BookForm, type BookFormValues } from './components/book-form';
 import { v4 as uuidv4 } from 'uuid';
-import { createBookAndEntry, updateBookAndEntry, fetchLibraryData } from './services/api';
+import { createBookAndEntry, updateBookAndEntry, fetchLibraryData, deleteBookAndEntry } from './services/api';
 
 /* Type for the Context */
 export type LibraryContextType = {
@@ -22,6 +22,7 @@ export type LibraryContextType = {
   updateRichNotes: (id: string, richNotes: string | null) => void;
   toggleOwned: (id: string) => void;
   openBookForm: (bookId?: string) => void;
+  deleteBook: (bookId: string) => void;
 };
 
 function App() {
@@ -41,31 +42,50 @@ function App() {
       const loadedBooks: Book[] = [];
       const loadedLibrary: LibraryBook[] = [];
 
-      data.forEach((row: any) => {
+      data.forEach((row: {
+        id: string;
+        book_id: string;
+        status: ReadingStatus;
+        owned: boolean;
+        priority: 1 | 2 | 3 | 4 | 5;
+        rating: 1 | 2 | 3 | 4 | 5 | null;
+        notes: string | null;
+        rich_notes: string | null;
+        hooked: boolean;
+        started_at: string | null;
+        finished_at: string | null;
+        book: {
+          id: string;
+          title: string;
+          author: string;
+          cover_url: string | null;
+          description: string | null;
+        } | null;
+      }) => {
         // Map Book
         if (row.book) {
           loadedBooks.push({
             id: row.book.id,
             title: row.book.title,
             author: row.book.author,
-            coverUrl: row.book.cover_url,
-            description: row.book.description,
+            coverUrl: row.book.cover_url || undefined,
+            description: row.book.description || undefined,
           });
         }
 
-        // Map Library Entry
+        // 2. Update Library Entry
         loadedLibrary.push({
           id: row.id,
           bookId: row.book_id,
           status: row.status,
           owned: row.owned,
           priority: row.priority,
-          rating: row.rating,
-          notes: row.notes,
-          richNotes: row.rich_notes,
+          rating: (row.rating || undefined) as 1 | 2 | 3 | 4 | 5 | undefined,
+          notes: row.notes || undefined,
+          richNotes: row.rich_notes || undefined,
           hooked: row.hooked,
-          startedAt: row.started_at,
-          finishedAt: row.finished_at,
+          startedAt: row.started_at || undefined,
+          finishedAt: row.finished_at || undefined,
         });
       });
 
@@ -238,6 +258,19 @@ function App() {
     setIsFormOpen(true);
   };
 
+  const deleteBook = async (bookId: string) => {
+    if (!confirm("Are you sure you want to delete this book? This action cannot be undone.")) return;
+
+    try {
+      await deleteBookAndEntry(bookId);
+      setBooks(prev => prev.filter(b => b.id !== bookId));
+      setLibrary(prev => prev.filter(e => e.bookId !== bookId));
+    } catch (err) {
+      console.error("Failed to delete book:", err);
+      setError(err instanceof Error ? err.message : "Failed to delete book.");
+    }
+  };
+
   const handleFormSubmit = async (data: BookFormValues) => {
     try {
       if (editingId) {
@@ -253,9 +286,9 @@ function App() {
           return {
             ...e,
             status: data.status,
-            priority: data.priority as any,
+            priority: data.priority as 1 | 2 | 3 | 4 | 5,
             owned: data.owned,
-            rating: data.rating as any,
+            rating: data.rating as 1 | 2 | 3 | 4 | 5 | undefined,
             notes: data.notes,
             // If status changed to finished, set finishedAt if missing
             finishedAt: data.status === 'finished' && !e.finishedAt ? new Date().toISOString().split('T')[0] : e.finishedAt,
@@ -282,9 +315,9 @@ function App() {
           id: newEntryId,
           bookId: newBookId,
           status: data.status,
-          priority: data.priority as any,
+          priority: data.priority as 1 | 2 | 3 | 4 | 5,
           owned: data.owned,
-          rating: data.rating as any,
+          rating: data.rating as 1 | 2 | 3 | 4 | 5 | undefined,
           notes: data.notes,
           hooked: false,
           startedAt: data.status === 'reading' ? new Date().toISOString().split('T')[0] : undefined,
@@ -295,9 +328,9 @@ function App() {
         setLibrary(prev => [newEntry, ...prev]);
       }
       setIsFormOpen(false);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to save book:", err);
-      setError(err.message || "Failed to save book. Please try again.");
+      setError(err instanceof Error ? err.message : "Failed to save book. Please try again.");
     }
   };
 
@@ -310,7 +343,8 @@ function App() {
     updateNotes,
     updateRichNotes,
     toggleOwned,
-    openBookForm
+    openBookForm,
+    deleteBook
   };
 
   return (

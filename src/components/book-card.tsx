@@ -1,6 +1,6 @@
 import { StatusBadge } from "./status-badge";
 import { RatingStars } from "./rating-stars";
-import { Clock, Calendar, BookOpen, ChevronDown, Pen, Eye } from "lucide-react";
+import { Clock, Calendar, BookOpen, ChevronDown, Pen, Eye, Trash2 } from "lucide-react";
 import type { Book, LibraryBook, ReadingStatus } from "../data/mockLibrary";
 import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
@@ -23,6 +23,7 @@ interface BookCardProps {
   onUpdateRating: (rating: 1 | 2 | 3 | 4 | 5) => void;
   onToggleOwned: () => void;
   onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 const STATUS_LABELS: Record<ReadingStatus, string> = {
@@ -34,7 +35,7 @@ const STATUS_LABELS: Record<ReadingStatus, string> = {
   abandoned: "Abandoned",
 };
 
-export function BookCard({ book, entry, onUpdateStatus, onUpdateRating, onEdit }: BookCardProps) {
+export function BookCard({ book, entry, onUpdateStatus, onUpdateRating, onEdit, onDelete }: BookCardProps) {
   const isFinished = entry.status === "finished";
 
   return (
@@ -158,6 +159,10 @@ export function BookCard({ book, entry, onUpdateStatus, onUpdateRating, onEdit }
                   </DropdownMenuRadioItem>
                 ))}
               </DropdownMenuRadioGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={onDelete} className="text-xs cursor-pointer text-destructive focus:text-destructive">
+                <Trash2 className="mr-2 h-3 w-3" /> Delete Book
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
