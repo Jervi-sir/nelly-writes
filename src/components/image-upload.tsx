@@ -4,6 +4,74 @@ import { Button } from "./ui/button";
 import { Upload, X, Loader2 } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 
+
+const compressImage = async (file: File): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.src = objectUrl;
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+
+      // Calculate new dimensions
+      let { width, height } = img;
+      const MAX_HEIGHT = 480; // Only enforce 480p height constraint
+
+      if (height > MAX_HEIGHT) {
+        const ratio = MAX_HEIGHT / height;
+        width = Math.round(width * ratio);
+        height = MAX_HEIGHT;
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Failed to get canvas context"));
+        return;
+      }
+
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Start with high quality, reduce if needed
+      const quality = 0.9;
+      const MAX_SIZE = 500 * 1024; // 500KB
+
+      const attemptCompression = (q: number) => {
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              reject(new Error("Canvas to Blob failed"));
+              return;
+            }
+
+            if (blob.size <= MAX_SIZE || q < 0.2) {
+              // Convert blob back to File
+              const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
+                type: "image/jpeg",
+                lastModified: Date.now(),
+              });
+              resolve(newFile);
+            } else {
+              // Reduce quality and try again
+              attemptCompression(q - 0.1);
+            }
+          },
+          "image/jpeg",
+          q
+        );
+      };
+
+      attemptCompression(quality);
+    };
+
+    img.onerror = (error) => reject(error);
+  });
+};
+
 interface ImageUploadProps {
   value?: string;
   onChange: (url: string) => void;
@@ -24,7 +92,7 @@ export function ImageUpload({ value, onChange, bucket = "book" }: ImageUploadPro
       return;
     }
 
-    // Validate size (e.g., 5MB)
+    // Validate size (e.g., 5MB) - check input size before compression attempts
     if (file.size > 5 * 1024 * 1024) {
       setError("Image size must be less than 5MB.");
       return;
@@ -33,14 +101,16 @@ export function ImageUpload({ value, onChange, bucket = "book" }: ImageUploadPro
     setIsUploading(true);
     setError(null);
 
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${uuidv4()}.${fileExt}`;
-    const filePath = `${fileName}`;
-
     try {
+      const compressedFile = await compressImage(file);
+
+      const fileExt = compressedFile.name.split('.').pop();
+      const fileName = `${uuidv4()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
       const { error: uploadError } = await supabase.storage
         .from(bucket)
-        .upload(filePath, file);
+        .upload(filePath, compressedFile);
 
       if (uploadError) {
         throw uploadError;
@@ -60,7 +130,22 @@ export function ImageUpload({ value, onChange, bucket = "book" }: ImageUploadPro
     }
   };
 
-  const handleRemove = () => {
+  const handleRemove = async () => {
+    if (value) {
+      try {
+        const url = new URL(value);
+        const pathParts = url.pathname.split('/');
+        const bucketIndex = pathParts.indexOf(bucket);
+
+        if (bucketIndex > -1) {
+          const filePath = pathParts.slice(bucketIndex + 1).join('/');
+          const { error } = await supabase.storage.from(bucket).remove([filePath]);
+          if (error) throw error;
+        }
+      } catch (error) {
+        console.error("Error removing image from storage:", error);
+      }
+    }
     onChange("");
   };
 

@@ -156,7 +156,7 @@ export function BookForm({ open, onOpenChange, onSubmit, initialData }: BookForm
                     <FormLabel>Status</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select status" />
                         </SelectTrigger>
                       </FormControl>
@@ -187,7 +187,7 @@ export function BookForm({ open, onOpenChange, onSubmit, initialData }: BookForm
                         defaultValue={field.value ? field.value.toString() : "3"}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="w-full">
                             <SelectValue placeholder="3" />
                           </SelectTrigger>
                         </FormControl>

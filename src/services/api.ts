@@ -152,7 +152,30 @@ export const updateRichNotes = async (
   if (error) throw error;
 };
 export const deleteBookAndEntry = async (bookId: string) => {
-  // 1. Delete Library Entry first (due to foreign key usually)
+  // 1. Get book info to clean up storage
+  const { data: book } = await supabase
+    .from("books")
+    .select("cover_url")
+    .eq("id", bookId)
+    .single();
+
+  if (book?.cover_url) {
+    try {
+      const url = new URL(book.cover_url);
+      const parts = url.pathname.split('/');
+      const bucket = "book"; // Default bucket
+      const bucketIndex = parts.indexOf(bucket);
+
+      if (bucketIndex > -1) {
+        const filePath = parts.slice(bucketIndex + 1).join('/');
+        await supabase.storage.from(bucket).remove([filePath]);
+      }
+    } catch (error) {
+      console.error("Error deleting cover image:", error);
+    }
+  }
+
+  // 2. Delete Library Entry first
   const { error: libraryError } = await supabase
     .from("library")
     .delete()
