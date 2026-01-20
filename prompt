@@ -94,7 +94,7 @@ export const books: Book[] = [
     id: "b1",
     title: "White Nights",
     author: "Fyodor Dostoevsky",
-    coverUrl: "/covers/white-nights.jpg",
+    coverUrl: "/books/white-nights.jpg",
   },
   ...
 ];

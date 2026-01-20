@@ -4,8 +4,10 @@ import { Layout } from './components/layout';
 import Dashboard from './pages/Dashboard';
 import Library from './pages/Library';
 import Wishlist from './pages/Wishlist';
-import { books as initialBooks, libraryBooks as initialLibrary } from './data/mockLibrary';
+import { books as initialBooksData, libraryBooks as initialLibrary } from './data/mockLibrary';
 import type { ReadingStatus, LibraryBook, Book } from './data/mockLibrary';
+import { BookForm, type BookFormValues } from './components/book-form';
+import { v4 as uuidv4 } from 'uuid';
 
 /* Type for the Context */
 export type LibraryContextType = {
@@ -14,12 +16,23 @@ export type LibraryContextType = {
   updateStatus: (id: string, status: ReadingStatus) => void;
   updateRating: (id: string, rating: 1 | 2 | 3 | 4 | 5) => void;
   toggleOwned: (id: string) => void;
+  openBookForm: (bookId?: string) => void;
 };
 
 function App() {
   // State
+  const [books, setBooks] = useState<Book[]>(initialBooksData);
   const [library, setLibrary] = useState<LibraryBook[]>(initialLibrary);
   const [error, setError] = useState<string | null>(null);
+
+  // Form State
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  // Derived state for editing
+  const editingEntry = editingId ? library.find(e => e.bookId === editingId) : null;
+  const editingBook = editingId ? books.find(b => b.id === editingId) : null;
+  const initialFormData = editingEntry && editingBook ? { book: editingBook, entry: editingEntry } : null;
 
   // Actions
   const updateStatus = (id: string, newStatus: ReadingStatus) => {
@@ -49,12 +62,6 @@ function App() {
         updates.finishedAt = new Date().toISOString().split('T')[0];
       }
 
-      // Clear finishedAt if moving away from finished? Maybe?
-      // Prompt says "Finished books must show finishedAt", doesn't explicitly say clear it.
-      // But typically if you restart reading, you might clear it?
-      // I'll leave it to be safe or set to undefined if moving to reading?
-      // Let's keep data preservation unless logic dictates otherwise.
-
       return { ...entry, ...updates };
     }));
   };
@@ -66,7 +73,6 @@ function App() {
 
       // Constraint: Cannot rate books unless status is finished
       if (entry.status !== "finished") {
-        // Should ideally be prevented by UI too
         setError("You can only rate finished books.");
         return entry;
       }
@@ -84,13 +90,9 @@ function App() {
       let newStatus = entry.status;
 
       // Constraint: Wishlist books must have owned = false
-      // If we mark as owned, it can't be wishlist anymore.
       if (newOwned && entry.status === "wishlist") {
         newStatus = "owned"; // Default to Owned/TBR
       }
-      // If we mark as NOT owned, and it was "owned", maybe move to wishlist?
-      // Or just stay "owned" status but owned=false? That makes no sense.
-      // If status is "owned" (meaning TBR) and we uncheck owned, it feels like it becomes Wishlist?
       if (!newOwned && entry.status === "owned") {
         newStatus = "wishlist";
       }
@@ -99,12 +101,72 @@ function App() {
     }));
   };
 
+  const openBookForm = (bookId?: string) => {
+    if (bookId) {
+      setEditingId(bookId);
+    } else {
+      setEditingId(null);
+    }
+    setIsFormOpen(true);
+  };
+
+  const handleFormSubmit = (data: BookFormValues) => {
+    if (editingId) {
+      // Edit Mode
+      setBooks(prev => prev.map(b => b.id === editingId ? { ...b, title: data.title, author: data.author, coverUrl: data.coverUrl, description: data.description } : b));
+
+      setLibrary(prev => prev.map(e => {
+        if (e.bookId !== editingId) return e;
+        return {
+          ...e,
+          status: data.status,
+          priority: data.priority as any,
+          owned: data.owned,
+          rating: data.rating as any,
+          notes: data.notes,
+          // If status changed to finished, set finishedAt if missing
+          finishedAt: data.status === 'finished' && !e.finishedAt ? new Date().toISOString().split('T')[0] : e.finishedAt
+        };
+      }));
+    } else {
+      // Add Mode
+      const newBookId = uuidv4();
+      const newEntryId = uuidv4();
+
+      const newBook: Book = {
+        id: newBookId,
+        title: data.title,
+        author: data.author,
+        coverUrl: data.coverUrl,
+        description: data.description,
+      };
+
+      const newEntry: LibraryBook = {
+        id: newEntryId,
+        bookId: newBookId,
+        status: data.status,
+        priority: data.priority as any,
+        owned: data.owned,
+        rating: data.rating as any,
+        notes: data.notes,
+        hooked: false,
+        startedAt: data.status === 'reading' ? new Date().toISOString().split('T')[0] : undefined,
+        finishedAt: data.status === 'finished' ? new Date().toISOString().split('T')[0] : undefined,
+      };
+
+      setBooks(prev => [newBook, ...prev]);
+      setLibrary(prev => [newEntry, ...prev]);
+    }
+    setIsFormOpen(false);
+  };
+
   const contextValue: LibraryContextType = {
-    books: initialBooks, // Read-only metadata
+    books,
     library,
     updateStatus,
     updateRating,
-    toggleOwned
+    toggleOwned,
+    openBookForm
   };
 
   return (
@@ -127,11 +189,12 @@ function App() {
         </Route>
       </Routes>
 
-      {/* Pass context via Outlet context in Route element? No, Routing structure separates them. */}
-      {/* We need to wrap Routes with a Context Provider if we used Context, but here we are using Outlet context. */}
-      {/* Wait, Outlet context is passed from the Layout component via <Outlet context={...} /> */}
-      {/* Layout is inside Route element. Layout doesn't have access to these props unless we pass them or wrap Browser Router inside App content? */}
-      {/* App has the state. Helper: I can't pass props to Layout easily with Route element syntax without a wrapper. */}
+      <BookForm
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        onSubmit={handleFormSubmit}
+        initialData={initialFormData}
+      />
 
     </BrowserRouter>
   );

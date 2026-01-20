@@ -6,7 +6,7 @@ import type { LibraryContextType } from "../app";
 import { SortAsc, SortDesc } from "lucide-react";
 
 export default function Library() {
-  const { books, library, updateStatus, updateRating, toggleOwned } = useOutletContext<LibraryContextType>();
+  const { books, library, updateStatus, updateRating, toggleOwned, openBookForm } = useOutletContext<LibraryContextType>();
 
   // Filters State
   const [filterStatus, setFilterStatus] = useState<ReadingStatus | "all">("all");
@@ -98,6 +98,7 @@ export default function Library() {
               onUpdateStatus={(s) => updateStatus(entry.id, s)}
               onUpdateRating={(r) => updateRating(entry.id, r)}
               onToggleOwned={() => toggleOwned(entry.id)}
+              onEdit={() => openBookForm?.(book.id)}
             />
           );
         })}

@@ -1,6 +1,6 @@
 import { StatusBadge } from "./status-badge";
 import { RatingStars } from "./rating-stars";
-import { Clock, Calendar, Bookmark, BookOpen, ChevronDown } from "lucide-react";
+import { Clock, Calendar, Bookmark, BookOpen, ChevronDown, Pen } from "lucide-react";
 import type { Book, LibraryBook, ReadingStatus } from "../data/mockLibrary";
 import { Button } from "./ui/button";
 import {
@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
+  DropdownMenuItem,
 } from "./ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +21,7 @@ interface BookCardProps {
   onUpdateStatus: (newStatus: ReadingStatus) => void;
   onUpdateRating: (rating: 1 | 2 | 3 | 4 | 5) => void;
   onToggleOwned: () => void;
+  onEdit?: () => void;
 }
 
 const STATUS_LABELS: Record<ReadingStatus, string> = {
@@ -31,7 +33,7 @@ const STATUS_LABELS: Record<ReadingStatus, string> = {
   abandoned: "Abandoned",
 };
 
-export function BookCard({ book, entry, onUpdateStatus, onUpdateRating, onToggleOwned }: BookCardProps) {
+export function BookCard({ book, entry, onUpdateStatus, onUpdateRating, onToggleOwned, onEdit }: BookCardProps) {
   const isFinished = entry.status === "finished";
 
   return (
@@ -138,8 +140,12 @@ export function BookCard({ book, entry, onUpdateStatus, onUpdateRating, onToggle
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuLabel>Change Status</DropdownMenuLabel>
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem onClick={onEdit} className="text-xs cursor-pointer">
+                <Pen className="mr-2 h-3 w-3" /> Edit Details
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
+              <DropdownMenuLabel>Status</DropdownMenuLabel>
               <DropdownMenuRadioGroup
                 value={entry.status}
                 onValueChange={(val) => onUpdateStatus(val as ReadingStatus)}

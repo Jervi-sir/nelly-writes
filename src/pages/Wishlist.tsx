@@ -3,7 +3,7 @@ import type { LibraryContextType } from "../app";
 import { BookCard } from "../components/book-card";
 
 export default function Wishlist() {
-  const { books, library, updateStatus, updateRating, toggleOwned } = useOutletContext<LibraryContextType>();
+  const { books, library, updateStatus, updateRating, toggleOwned, openBookForm } = useOutletContext<LibraryContextType>();
 
   const wishlistEntries = library.filter(l => l.status === "wishlist");
 
@@ -25,6 +25,7 @@ export default function Wishlist() {
               onUpdateStatus={(s) => updateStatus(entry.id, s)}
               onUpdateRating={(r) => updateRating(entry.id, r)}
               onToggleOwned={() => toggleOwned(entry.id)}
+              onEdit={() => openBookForm?.(book.id)}
             />
           );
         })}

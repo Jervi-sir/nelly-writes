@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { Book, Menu } from "lucide-react";
+import { Book, Menu, Plus } from "lucide-react";
 import { ModeToggle } from "./mode-toggle";
 import { Button } from "./ui/button";
 import {
@@ -8,9 +8,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import type { LibraryContextType } from "../app";
 
 interface LayoutProps {
-  context?: any;
+  context?: LibraryContextType;
 }
 
 export function Layout({ context }: LayoutProps) {
@@ -37,7 +38,7 @@ export function Layout({ context }: LayoutProps) {
             </Link>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {/* Desktop Nav */}
             <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
               {navItems.map((item) => {
@@ -54,7 +55,19 @@ export function Layout({ context }: LayoutProps) {
               })}
             </nav>
 
-            <ModeToggle />
+            <div className="h-6 w-px bg-border hidden md:block" />
+
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                className="gap-2 h-9 rounded-full sm:rounded-md px-3"
+                onClick={() => context?.openBookForm?.()}
+              >
+                <Plus size={16} />
+                <span className="hidden sm:inline">Add Book</span>
+              </Button>
+              <ModeToggle />
+            </div>
 
             {/* Mobile Nav */}
             <div className="md:hidden">
@@ -76,6 +89,9 @@ export function Layout({ context }: LayoutProps) {
                       </Link>
                     </DropdownMenuItem>
                   ))}
+                  <DropdownMenuItem onClick={() => context?.openBookForm?.()} className="font-bold text-primary cursor-pointer">
+                    <Plus className="mr-2 h-4 w-4" /> Add Book
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

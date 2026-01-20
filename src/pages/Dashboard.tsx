@@ -4,7 +4,7 @@ import { BookCard } from "../components/book-card";
 import type { LibraryContextType } from "../app";
 
 export default function Dashboard() {
-  const { books, library, updateStatus, updateRating, toggleOwned } = useOutletContext<LibraryContextType>();
+  const { books, library, updateStatus, updateRating, toggleOwned, openBookForm } = useOutletContext<LibraryContextType>();
 
   const readingEntries = library.filter((l) => l.status === "reading");
 
@@ -64,6 +64,7 @@ export default function Dashboard() {
                 onUpdateStatus={(s) => updateStatus(entry.id, s)}
                 onUpdateRating={(r) => updateRating(entry.id, r)}
                 onToggleOwned={() => toggleOwned(entry.id)}
+                onEdit={() => openBookForm?.(book.id)}
               />
             ))}
           </div>
