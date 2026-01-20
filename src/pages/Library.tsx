@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useOutletContext, useSearchParams } from "react-router-dom";
 import type { ReadingStatus } from "../data/mockLibrary";
 import { BookCard } from "../components/book-card";
 import type { LibraryContextType } from "../app";
@@ -7,11 +7,30 @@ import { SortAsc, SortDesc } from "lucide-react";
 
 export default function Library() {
   const { books, library, updateStatus, updateRating, toggleOwned, openBookForm, deleteBook } = useOutletContext<LibraryContextType>();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // Filters State
-  const [filterStatus, setFilterStatus] = useState<ReadingStatus | "all">("all");
-  const [filterOwned, setFilterOwned] = useState<"all" | "owned" | "not-owned">("all");
+  // Filters State - Initialize from URL
+  const [filterStatus, setFilterStatus] = useState<ReadingStatus | "all">((searchParams.get("status") as ReadingStatus | "all") || "all");
+  const [filterOwned, setFilterOwned] = useState<"all" | "owned" | "not-owned">((searchParams.get("owned") === "true" ? "owned" : "all"));
   const [sortOrder, setSortOrder] = useState<"priority" | "recent">("recent");
+
+  // Sync state to URL when changed (optional, but good UX)
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    if (filterStatus && filterStatus !== "all") {
+      params.set("status", filterStatus);
+    } else {
+      params.delete("status");
+    }
+
+    if (filterOwned && filterOwned !== "all") {
+      if (filterOwned === 'owned') params.set("owned", "true");
+      else if (filterOwned === 'not-owned') params.set("owned", "false"); // Although we only check for "true" in init right now
+    } else {
+      params.delete("owned");
+    }
+    setSearchParams(params, { replace: true });
+  }, [filterStatus, filterOwned]);
 
   // Filter Logic
   const filteredLibrary = library.filter((entry) => {

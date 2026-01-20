@@ -1,4 +1,4 @@
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, Link } from "react-router-dom";
 
 import { BookCard } from "../components/book-card";
 import type { LibraryContextType } from "../app";
@@ -27,22 +27,22 @@ export default function Dashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="p-6 rounded-xl bg-card border border-border shadow-sm">
+        <Link to="/library?status=reading" className="p-6 rounded-xl bg-card border border-border shadow-sm hover:bg-accent/50 transition-colors">
           <div className="text-2xl font-bold">{readingEntries.length}</div>
           <div className="text-sm text-muted-foreground">Reading Now</div>
-        </div>
-        <div className="p-6 rounded-xl bg-card border border-border shadow-sm">
+        </Link>
+        <Link to="/library?status=finished" className="p-6 rounded-xl bg-card border border-border shadow-sm hover:bg-accent/50 transition-colors">
           <div className="text-2xl font-bold">{finishedCount}</div>
           <div className="text-sm text-muted-foreground">Read this year</div>
-        </div>
-        <div className="p-6 rounded-xl bg-card border border-border shadow-sm">
+        </Link>
+        <Link to="/wishlist" className="p-6 rounded-xl bg-card border border-border shadow-sm hover:bg-accent/50 transition-colors">
           <div className="text-2xl font-bold">{wishlistCount}</div>
           <div className="text-sm text-muted-foreground">On Wishlist</div>
-        </div>
-        <div className="p-6 rounded-xl bg-card border border-border shadow-sm">
+        </Link>
+        <Link to="/library?owned=true" className="p-6 rounded-xl bg-card border border-border shadow-sm hover:bg-accent/50 transition-colors">
           <div className="text-2xl font-bold">{ownedCount}</div>
           <div className="text-sm text-muted-foreground">Books Owned</div>
-        </div>
+        </Link>
       </div>
 
       {/* Currently Reading */}
