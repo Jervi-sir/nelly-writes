@@ -24,7 +24,8 @@ export function Layout({ context }: LayoutProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans antialiased selection:bg-primary/20">
+    // Restricted width wrapper to simulate mobile device on desktop
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans antialiased selection:bg-primary/20 max-w-md mx-auto border-x border-border shadow-2xl">
       {/* Navbar */}
       <header className="sticky top-0 z-40 w-full border-b border-border bg-background/80 backdrop-blur-md">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -33,44 +34,26 @@ export function Layout({ context }: LayoutProps) {
               <div className="bg-primary text-primary-foreground p-1.5 rounded-lg">
                 <Book size={20} />
               </div>
-              <span className="hidden sm:inline-block">NellyReads</span>
-              <span className="sm:hidden">NR</span>
+              <span>NellyReads</span>
             </Link>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-4">
-            {/* Desktop Nav */}
-            <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-              {navItems.map((item) => {
-                const isActive = location.pathname === item.path || (item.path !== "/" && location.pathname.startsWith(item.path));
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`transition-colors hover:text-primary ${isActive ? "text-primary font-bold" : "text-muted-foreground"}`}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </nav>
-
-            <div className="h-6 w-px bg-border hidden md:block" />
+          <div className="flex items-center gap-2">
 
             <div className="flex items-center gap-2">
               <Button
                 size="sm"
-                className="gap-2 h-9 rounded-full sm:rounded-md px-3"
+                className="gap-2 h-9 rounded-full px-3"
                 onClick={() => context?.openBookForm?.()}
               >
                 <Plus size={16} />
-                <span className="hidden sm:inline">Add Book</span>
+                <span className="sr-only">Add Book</span> {/* Icon only for mobile look */}
               </Button>
               <ModeToggle />
             </div>
 
-            {/* Mobile Nav */}
-            <div className="md:hidden">
+            {/* Mobile Nav - Always Visible */}
+            <div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="-mr-2">
@@ -100,14 +83,14 @@ export function Layout({ context }: LayoutProps) {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="mx-auto max-w-7xl animate-in fade-in duration-500">
+      <main className="flex-1 container mx-auto px-4 py-6">
+        <div className="mx-auto animate-in fade-in duration-500">
           <Outlet context={context} />
         </div>
       </main>
 
       <footer className="border-t border-border py-6 text-center text-sm text-muted-foreground">
-        <p>&copy; 2026 Nelly Reads. Mock Data Mode.</p>
+        <p>&copy; 2026 Nelly Reads.</p>
       </footer>
     </div>
   );

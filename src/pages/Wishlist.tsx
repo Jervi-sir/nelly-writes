@@ -14,7 +14,7 @@ export default function Wishlist() {
         <p className="text-muted-foreground">Books you want to acquire.</p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         {wishlistEntries.map((entry) => {
           const book = books.find(b => b.id === entry.bookId)!;
           return (

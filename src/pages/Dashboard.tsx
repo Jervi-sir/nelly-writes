@@ -26,7 +26,7 @@ export default function Dashboard() {
       </header>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <div className="p-6 rounded-xl bg-card border border-border shadow-sm">
           <div className="text-2xl font-bold">{readingEntries.length}</div>
           <div className="text-sm text-muted-foreground">Reading Now</div>
@@ -55,7 +55,7 @@ export default function Dashboard() {
         </div>
 
         {readingBooks.length > 0 ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6">
             {readingBooks.map(({ book, entry }) => (
               <BookCard
                 key={entry.id}

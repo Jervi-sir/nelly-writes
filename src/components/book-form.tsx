@@ -84,7 +84,7 @@ export function BookForm({ open, onOpenChange, onSubmit, initialData }: BookForm
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[400px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{initialData ? "Edit Book" : "Add New Book"}</DialogTitle>
           <DialogDescription>
@@ -94,9 +94,9 @@ export function BookForm({ open, onOpenChange, onSubmit, initialData }: BookForm
 
         <Form {...methods}>
           <form onSubmit={methods.handleSubmit((data) => onFormSubmit(data as unknown as BookFormValues))} className="space-y-6">
-            <div className="flex flex-col sm:flex-row gap-6">
+            <div className="flex flex-col gap-6">
               {/* Left Column: Image */}
-              <div className="shrink-0 flex justify-center sm:justify-start">
+              <div className="shrink-0 flex justify-center">
                 <FormField
                   // control={form.control}
                   name="coverUrl"
@@ -147,7 +147,7 @@ export function BookForm({ open, onOpenChange, onSubmit, initialData }: BookForm
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <FormField
                 // control={form.control}
                 name="status"

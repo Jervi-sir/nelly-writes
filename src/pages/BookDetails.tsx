@@ -33,9 +33,9 @@ export default function BookDetails() {
         <ArrowLeft size={16} /> Back
       </Button>
 
-      <div className="flex flex-col md:flex-row gap-8 items-start">
+      <div className="flex flex-col gap-8 items-start">
         {/* Left Column: Cover & Quick Actions */}
-        <div className="w-full md:w-64 shrink-0 space-y-4">
+        <div className="w-full shrink-0 space-y-4">
           <div className="aspect-[2/3] rounded-lg overflow-hidden shadow-xl border border-border/50 bg-muted relative">
             {book.coverUrl ? (
               <img
@@ -81,7 +81,7 @@ export default function BookDetails() {
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-card border border-border/50 rounded-xl">
+          <div className="grid grid-cols-2 gap-4 p-4 bg-card border border-border/50 rounded-xl">
             <div className="space-y-1">
               <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Priority</span>
               <div className="font-bold text-lg">P{entry.priority}</div>

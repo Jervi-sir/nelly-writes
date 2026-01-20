@@ -38,7 +38,7 @@ export default function Library() {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <header className="flex flex-col gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Library</h1>
           <p className="text-muted-foreground">{filteredLibrary.length} books found</p>
@@ -87,7 +87,7 @@ export default function Library() {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         {sortedLibrary.map((entry) => {
           const book = books.find(b => b.id === entry.bookId)!;
           return (
