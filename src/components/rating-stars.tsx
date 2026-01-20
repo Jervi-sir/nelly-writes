@@ -6,9 +6,10 @@ interface RatingStarsProps {
   onChange?: (rating: 1 | 2 | 3 | 4 | 5) => void;
   readOnly?: boolean;
   disabled?: boolean;
+  size?: number;
 }
 
-export function RatingStars({ rating = 0, max = 5, onChange, readOnly = false, disabled = false }: RatingStarsProps) {
+export function RatingStars({ rating = 0, max = 5, onChange, readOnly = false, disabled = false, size = 16 }: RatingStarsProps) {
   return (
     <div className={`flex items-center gap-0.5 ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}>
       {Array.from({ length: max }).map((_, i) => {
@@ -33,7 +34,7 @@ export function RatingStars({ rating = 0, max = 5, onChange, readOnly = false, d
             disabled={disabled || readOnly}
           >
             <Star
-              size={16}
+              size={size}
               className={`${filled ? "fill-current" : ""}`}
             />
           </button>

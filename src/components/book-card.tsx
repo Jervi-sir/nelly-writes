@@ -3,6 +3,7 @@ import { RatingStars } from "./rating-stars";
 import { Clock, Calendar, Bookmark, BookOpen, ChevronDown, Pen } from "lucide-react";
 import type { Book, LibraryBook, ReadingStatus } from "../data/mockLibrary";
 import { Button } from "./ui/button";
+import { Link } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,7 +40,7 @@ export function BookCard({ book, entry, onUpdateStatus, onUpdateRating, onToggle
   return (
     <div className="group relative flex flex-row gap-4 p-4 rounded-xl bg-card border border-border hover:border-border/80 hover:shadow-lg transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 w-full">
       {/* Cover Image Section */}
-      <div className="shrink-0 relative w-24 sm:w-32 aspect-[2/3] rounded-md overflow-hidden shadow-sm group-hover:shadow-md transition-all duration-300 ring-1 ring-border/10">
+      <Link to={`/book/${book.id}`} className="shrink-0 relative w-24 sm:w-32 aspect-[2/3] rounded-md overflow-hidden shadow-sm group-hover:shadow-md transition-all duration-300 ring-1 ring-border/10 cursor-pointer">
         {book.coverUrl ? (
           <img
             src={book.coverUrl}
@@ -62,7 +63,7 @@ export function BookCard({ book, entry, onUpdateStatus, onUpdateRating, onToggle
             </span>
           </div>
         )}
-      </div>
+      </Link>
 
       {/* Content Section */}
       <div className="flex flex-col flex-1 min-w-0">
@@ -76,10 +77,12 @@ export function BookCard({ book, entry, onUpdateStatus, onUpdateRating, onToggle
                 </span>
               )}
             </div>
-            <h3 className="font-bold text-base sm:text-lg leading-tight text-foreground line-clamp-2" title={book.title}>
-              {book.title}
-            </h3>
-            <p className="text-xs sm:text-sm font-medium text-muted-foreground mt-0.5 line-clamp-1">{book.author}</p>
+            <Link to={`/book/${book.id}`} className="block group-hover:underline decoration-primary/50 underline-offset-4">
+              <h3 className="font-bold text-base sm:text-lg leading-tight text-foreground line-clamp-2" title={book.title}>
+                {book.title}
+              </h3>
+              <p className="text-xs sm:text-sm font-medium text-muted-foreground mt-0.5 line-clamp-1">{book.author}</p>
+            </Link>
           </div>
 
           <Button

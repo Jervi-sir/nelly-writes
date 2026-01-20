@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Layout } from './components/layout';
 import Dashboard from './pages/Dashboard';
 import Library from './pages/Library';
 import Wishlist from './pages/Wishlist';
-import { books as initialBooksData, libraryBooks as initialLibrary } from './data/mockLibrary';
+import BookDetails from './pages/BookDetails';
+
 import type { ReadingStatus, LibraryBook, Book } from './data/mockLibrary';
 import { BookForm, type BookFormValues } from './components/book-form';
 import { v4 as uuidv4 } from 'uuid';
+import { createBookAndEntry, updateBookAndEntry, fetchLibraryData } from './services/api';
 
 /* Type for the Context */
 export type LibraryContextType = {
@@ -15,15 +17,70 @@ export type LibraryContextType = {
   library: LibraryBook[];
   updateStatus: (id: string, status: ReadingStatus) => void;
   updateRating: (id: string, rating: 1 | 2 | 3 | 4 | 5) => void;
+  updateDate: (id: string, field: "startedAt" | "finishedAt", date: string | null) => void;
   toggleOwned: (id: string) => void;
   openBookForm: (bookId?: string) => void;
 };
 
 function App() {
   // State
-  const [books, setBooks] = useState<Book[]>(initialBooksData);
-  const [library, setLibrary] = useState<LibraryBook[]>(initialLibrary);
+  const [books, setBooks] = useState<Book[]>([]);
+  const [library, setLibrary] = useState<LibraryBook[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  // Load Data
+  useEffect(() => {
+    fetchLibraryData().then((data) => {
+      if (!data) return;
+
+      const loadedBooks: Book[] = [];
+      const loadedLibrary: LibraryBook[] = [];
+
+      data.forEach((row: any) => {
+        // Map Book
+        if (row.book) {
+          loadedBooks.push({
+            id: row.book.id,
+            title: row.book.title,
+            author: row.book.author,
+            coverUrl: row.book.cover_url,
+            description: row.book.description,
+          });
+        }
+
+        // Map Library Entry
+        loadedLibrary.push({
+          id: row.id,
+          bookId: row.book_id,
+          status: row.status,
+          owned: row.owned,
+          priority: row.priority,
+          rating: row.rating,
+          notes: row.notes,
+          hooked: row.hooked,
+          startedAt: row.started_at,
+          finishedAt: row.finished_at,
+        });
+      });
+
+      setBooks(() => {
+        // Merge invalidating mocks? Or just replace?
+        // Replacing is better to show DB truth.
+        // But duplicate handling? Distinct books.
+        // We can use a map to dedupe if multiple entries point to same book?
+        // In this app structure 1 entry = 1 book usually?
+        // But row.book might be duplicated if we had multiple library entries for same book? (Not allowed by logic usually but possible in DB).
+        // Let's unique-ify books by ID.
+        const uniqueBooks = Array.from(new Map(loadedBooks.map(b => [b.id, b])).values());
+        return uniqueBooks;
+      });
+      setLibrary(loadedLibrary);
+
+    }).catch(err => {
+      console.error("Failed to fetch library:", err);
+      // Optional: setError("Failed to load library data.");
+    });
+  }, []);
 
   // Form State
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -79,6 +136,41 @@ function App() {
 
       return { ...entry, rating };
     }));
+
+    // Find entry to get bookId
+    const entry = library.find(e => e.id === id);
+    if (!entry || entry.status !== "finished") return;
+
+    // API Call
+    import('./services/api').then(({ updateRating }) => {
+      updateRating(entry.bookId, rating).catch(err => {
+        console.error("Failed to update rating:", err);
+        setError("Failed to update rating.");
+      });
+    });
+  };
+
+  const updateDate = (id: string, field: "startedAt" | "finishedAt", date: string | null) => {
+    setError(null);
+
+    // Optimistic Update
+    setLibrary(prev => prev.map(entry => {
+      if (entry.id !== id) return entry;
+      return { ...entry, [field]: date };
+    }));
+
+    // Find entry to get bookId
+    const entry = library.find(e => e.id === id);
+    if (!entry) return;
+
+    // API Call
+    import('./services/api').then(({ updateDate }) => {
+      updateDate(entry.bookId, field === "startedAt" ? "started_at" : "finished_at", date).catch(err => {
+        console.error("Failed to update date:", err);
+        setError("Failed to update date.");
+        // Revert? For now simple error toast.
+      });
+    });
   };
 
   const toggleOwned = (id: string) => {
@@ -110,54 +202,67 @@ function App() {
     setIsFormOpen(true);
   };
 
-  const handleFormSubmit = (data: BookFormValues) => {
-    if (editingId) {
-      // Edit Mode
-      setBooks(prev => prev.map(b => b.id === editingId ? { ...b, title: data.title, author: data.author, coverUrl: data.coverUrl, description: data.description } : b));
+  const handleFormSubmit = async (data: BookFormValues) => {
+    try {
+      if (editingId) {
+        // Edit Mode
+        if (!editingEntry) return;
 
-      setLibrary(prev => prev.map(e => {
-        if (e.bookId !== editingId) return e;
-        return {
-          ...e,
+        await updateBookAndEntry(editingId, data, editingEntry);
+
+        setBooks(prev => prev.map(b => b.id === editingId ? { ...b, title: data.title, author: data.author, coverUrl: data.coverUrl, description: data.description } : b));
+
+        setLibrary(prev => prev.map(e => {
+          if (e.bookId !== editingId) return e;
+          return {
+            ...e,
+            status: data.status,
+            priority: data.priority as any,
+            owned: data.owned,
+            rating: data.rating as any,
+            notes: data.notes,
+            // If status changed to finished, set finishedAt if missing
+            finishedAt: data.status === 'finished' && !e.finishedAt ? new Date().toISOString().split('T')[0] : e.finishedAt,
+            // If status changed to reading, set startedAt if missing
+            startedAt: data.status === 'reading' && !e.startedAt ? new Date().toISOString().split('T')[0] : e.startedAt
+          };
+        }));
+      } else {
+        // Add Mode
+        const newBookId = uuidv4();
+        const newEntryId = uuidv4();
+
+        await createBookAndEntry(newBookId, newEntryId, data);
+
+        const newBook: Book = {
+          id: newBookId,
+          title: data.title,
+          author: data.author,
+          coverUrl: data.coverUrl,
+          description: data.description,
+        };
+
+        const newEntry: LibraryBook = {
+          id: newEntryId,
+          bookId: newBookId,
           status: data.status,
           priority: data.priority as any,
           owned: data.owned,
           rating: data.rating as any,
           notes: data.notes,
-          // If status changed to finished, set finishedAt if missing
-          finishedAt: data.status === 'finished' && !e.finishedAt ? new Date().toISOString().split('T')[0] : e.finishedAt
+          hooked: false,
+          startedAt: data.status === 'reading' ? new Date().toISOString().split('T')[0] : undefined,
+          finishedAt: data.status === 'finished' ? new Date().toISOString().split('T')[0] : undefined,
         };
-      }));
-    } else {
-      // Add Mode
-      const newBookId = uuidv4();
-      const newEntryId = uuidv4();
 
-      const newBook: Book = {
-        id: newBookId,
-        title: data.title,
-        author: data.author,
-        coverUrl: data.coverUrl,
-        description: data.description,
-      };
-
-      const newEntry: LibraryBook = {
-        id: newEntryId,
-        bookId: newBookId,
-        status: data.status,
-        priority: data.priority as any,
-        owned: data.owned,
-        rating: data.rating as any,
-        notes: data.notes,
-        hooked: false,
-        startedAt: data.status === 'reading' ? new Date().toISOString().split('T')[0] : undefined,
-        finishedAt: data.status === 'finished' ? new Date().toISOString().split('T')[0] : undefined,
-      };
-
-      setBooks(prev => [newBook, ...prev]);
-      setLibrary(prev => [newEntry, ...prev]);
+        setBooks(prev => [newBook, ...prev]);
+        setLibrary(prev => [newEntry, ...prev]);
+      }
+      setIsFormOpen(false);
+    } catch (err: any) {
+      console.error("Failed to save book:", err);
+      setError(err.message || "Failed to save book. Please try again.");
     }
-    setIsFormOpen(false);
   };
 
   const contextValue: LibraryContextType = {
@@ -165,6 +270,7 @@ function App() {
     library,
     updateStatus,
     updateRating,
+    updateDate, // Add this
     toggleOwned,
     openBookForm
   };
@@ -186,6 +292,7 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="library" element={<Library />} />
           <Route path="wishlist" element={<Wishlist />} />
+          <Route path="book/:id" element={<BookDetails />} />
         </Route>
       </Routes>
 
