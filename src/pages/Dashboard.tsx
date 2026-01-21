@@ -16,7 +16,7 @@ export default function Dashboard() {
 
   const finishedCount = library.filter(l => l.status === 'finished').length;
   const wishlistCount = library.filter(l => l.status === 'wishlist').length;
-  const ownedCount = library.filter(l => l.owned).length;
+  const ownedCount = library.filter(l => l.status === 'owned').length;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">

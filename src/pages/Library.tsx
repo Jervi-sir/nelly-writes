@@ -4,6 +4,7 @@ import type { ReadingStatus } from "../data/mockLibrary";
 import { BookCard } from "../components/book-card";
 import type { LibraryContextType } from "../app";
 import { SortAsc, SortDesc } from "lucide-react";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Library() {
   const { books, library, updateStatus, updateRating, toggleOwned, openBookForm, deleteBook } = useOutletContext<LibraryContextType>();
@@ -11,7 +12,6 @@ export default function Library() {
 
   // Filters State - Initialize from URL
   const [filterStatus, setFilterStatus] = useState<ReadingStatus | "all">((searchParams.get("status") as ReadingStatus | "all") || "all");
-  const [filterOwned, setFilterOwned] = useState<"all" | "owned" | "not-owned">((searchParams.get("owned") === "true" ? "owned" : "all"));
   const [sortOrder, setSortOrder] = useState<"priority" | "recent">("recent");
 
   // Sync state to URL when changed (optional, but good UX)
@@ -23,20 +23,12 @@ export default function Library() {
       params.delete("status");
     }
 
-    if (filterOwned && filterOwned !== "all") {
-      if (filterOwned === 'owned') params.set("owned", "true");
-      else if (filterOwned === 'not-owned') params.set("owned", "false"); // Although we only check for "true" in init right now
-    } else {
-      params.delete("owned");
-    }
     setSearchParams(params, { replace: true });
-  }, [filterStatus, filterOwned]);
+  }, [filterStatus, searchParams, setSearchParams]);
 
   // Filter Logic
   const filteredLibrary = library.filter((entry) => {
     if (filterStatus !== "all" && entry.status !== filterStatus) return false;
-    if (filterOwned === "owned" && !entry.owned) return false;
-    if (filterOwned === "not-owned" && entry.owned) return false;
     return true;
   });
 
@@ -66,33 +58,29 @@ export default function Library() {
         {/* Controls */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Status Filter */}
-          <div className="relative">
-            <select
+          <div className="relative flex-1">
+            <Select
               value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value as ReadingStatus | "all")}
-              className="h-9 pl-3 pr-8 rounded-md border border-input bg-background text-sm font-medium hover:bg-accent/50 focus:ring-1 focus:ring-ring outline-none appearance-none cursor-pointer"
+              onValueChange={(value) =>
+                setFilterStatus(value as ReadingStatus | "all")
+              }
             >
-              <option value="all">All Status</option>
-              <option value="reading">Reading</option>
-              <option value="finished">Finished</option>
-              <option value="wishlist">Wishlist</option>
-              <option value="paused">Paused</option>
-              <option value="abandoned">Abandoned</option>
-              <option value="owned">Owned (TBR)</option>
-            </select>
-          </div>
+              <SelectTrigger className="w-full h-9">
+                <SelectValue placeholder="All Status" />
+              </SelectTrigger>
 
-          {/* Owned Filter */}
-          <div className="relative">
-            <select
-              value={filterOwned}
-              onChange={(e) => setFilterOwned(e.target.value as "all" | "owned" | "not-owned")}
-              className="h-9 pl-3 pr-8 rounded-md border border-input bg-background text-sm font-medium hover:bg-accent/50 focus:ring-1 focus:ring-ring outline-none appearance-none cursor-pointer"
-            >
-              <option value="all">Ownership</option>
-              <option value="owned">Owned</option>
-              <option value="not-owned">Not Owned</option>
-            </select>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="reading">Reading</SelectItem>
+                  <SelectItem value="finished">Finished</SelectItem>
+                  <SelectItem value="wishlist">Wishlist</SelectItem>
+                  <SelectItem value="paused">Paused</SelectItem>
+                  <SelectItem value="abandoned">Abandoned</SelectItem>
+                  <SelectItem value="owned">Owned (TBR)</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Sort */}
