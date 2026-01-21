@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { Book, Menu, Plus } from "lucide-react";
+import { Book, Menu } from "lucide-react";
 import { ModeToggle } from "./mode-toggle";
 import { Button } from "./ui/button";
 import {
@@ -8,13 +8,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import type { LibraryContextType } from "../app";
 
-interface LayoutProps {
-  context?: LibraryContextType;
-}
-
-export function Layout({ context }: LayoutProps) {
+export function Layout() {
   const location = useLocation();
 
   const navItems = [
@@ -41,14 +36,6 @@ export function Layout({ context }: LayoutProps) {
           <div className="flex items-center gap-2">
 
             <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                className="gap-2 h-9 rounded-full px-3"
-                onClick={() => context?.openBookForm?.()}
-              >
-                <Plus size={16} />
-                <span className="sr-only">Add Book</span> {/* Icon only for mobile look */}
-              </Button>
               <ModeToggle />
             </div>
 
@@ -72,9 +59,6 @@ export function Layout({ context }: LayoutProps) {
                       </Link>
                     </DropdownMenuItem>
                   ))}
-                  <DropdownMenuItem onClick={() => context?.openBookForm?.()} className="font-bold text-primary cursor-pointer">
-                    <Plus className="mr-2 h-4 w-4" /> Add Book
-                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -85,7 +69,7 @@ export function Layout({ context }: LayoutProps) {
       {/* Main Content */}
       <main className="flex-1 container mx-auto px-4 py-6">
         <div className="mx-auto animate-in fade-in duration-500">
-          <Outlet context={context} />
+          <Outlet />
         </div>
       </main>
 

@@ -191,3 +191,44 @@ export const deleteBookAndEntry = async (bookId: string) => {
 
   if (bookError) throw bookError;
 };
+
+export const updateStatus = async (
+  bookId: string,
+  status: string
+) => {
+  const { error } = await supabase
+    .from("library")
+    .update({ status })
+    .eq("book_id", bookId);
+
+  if (error) throw error;
+};
+
+export const updateOwnedStatus = async (
+  bookId: string,
+  owned: boolean,
+  status: string
+) => {
+  const { error } = await supabase
+    .from("library")
+    .update({ owned, status })
+    .eq("book_id", bookId);
+
+  if (error) throw error;
+}
+
+export const fetchBookWithEntry = async (bookId: string) => {
+  const { data, error } = await supabase
+    .from('library')
+    .select(`
+      *,
+      book:books (
+        *
+      )
+    `)
+    .eq('book_id', bookId)
+    .single();
+
+  if (error) throw error;
+  return data;
+};

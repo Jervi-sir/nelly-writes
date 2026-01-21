@@ -1,10 +1,26 @@
-import { useOutletContext, Link } from "react-router-dom";
-
+import { Link } from "react-router-dom";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { BookCard } from "../components/book-card";
-import type { LibraryContextType } from "../app";
+import { useLibrary } from "../hooks/use-library";
+import { BookForm } from "../components/book-form";
 
 export default function Dashboard() {
-  const { books, library, updateStatus, updateRating, toggleOwned, openBookForm, deleteBook } = useOutletContext<LibraryContextType>();
+  const {
+    books,
+    library,
+    updateStatus,
+    updateRating,
+    toggleOwned,
+    openBookForm,
+    deleteBook,
+    isFormOpen,
+    setIsFormOpen,
+    handleFormSubmit,
+    initialFormData,
+    loading,
+    error
+  } = useLibrary();
 
   const readingEntries = library.filter((l) => l.status === "reading");
 
@@ -12,18 +28,29 @@ export default function Dashboard() {
   const readingBooks = readingEntries.map((entry) => ({
     entry,
     book: books.find((b) => b.id === entry.bookId)!,
-  }));
+  })).filter(item => item.book); // Ensure book exists
 
   const finishedCount = library.filter(l => l.status === 'finished').length;
   const wishlistCount = library.filter(l => l.status === 'wishlist').length;
   const ownedCount = library.filter(l => l.status === 'owned').length;
 
+  if (loading) {
+    return <div className="flex items-center justify-center p-12">Loading...</div>;
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <header>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back to your library.</p>
+      <header className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">Welcome back to your library.</p>
+        </div>
+        <Button onClick={() => openBookForm()} size="sm" className="gap-2 rounded-full">
+          <Plus size={16} /> Add Book
+        </Button>
       </header>
+
+      {error && <div className="text-red-500">{error}</div>}
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4">
@@ -75,6 +102,13 @@ export default function Dashboard() {
           </div>
         )}
       </section>
+
+      <BookForm
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        onSubmit={handleFormSubmit}
+        initialData={initialFormData}
+      />
     </div>
   );
 }

@@ -1,18 +1,34 @@
-import { useParams, useOutletContext, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Star, Pen, Trash2 } from "lucide-react";
-import type { LibraryContextType } from "../app";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
-
 import { RatingStars } from "@/components/rating-stars";
+import { useLibrary } from "../hooks/use-library";
+import { BookForm } from "../components/book-form";
 
 export default function BookDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { books, library, updateRating, updateDate, openBookForm, deleteBook } = useOutletContext<LibraryContextType>();
+  const {
+    books,
+    library,
+    updateRating,
+    updateDate,
+    openBookForm,
+    deleteBook,
+    isFormOpen,
+    setIsFormOpen,
+    handleFormSubmit,
+    initialFormData,
+    loading
+  } = useLibrary();
 
   const book = books.find(b => b.id === id);
   const entry = library.find(e => e.bookId === id);
+
+  if (loading) {
+    return <div className="flex justify-center p-12">Loading...</div>;
+  }
 
   if (!book || !entry) {
     return (
@@ -58,9 +74,9 @@ export default function BookDetails() {
             <Button
               className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive"
               variant="outline"
-              onClick={() => {
-                deleteBook(book.id);
-                navigate(-1);
+              onClick={async () => {
+                await deleteBook(book.id);
+                navigate("/library"); // Navigate back to library after delete
               }}
             >
               <Trash2 className="mr-2 h-4 w-4" /> Delete Book
@@ -133,15 +149,6 @@ export default function BookDetails() {
               {book.description || "No description available."}
             </p>
           </div>
-
-          {/* Editors */}
-          {/* <div className="space-y-3 pt-4 border-t border-border/50">
-            <h3 className="text-lg font-semibold">My Notes</h3>
-            <NotesEditor
-              initialNotes={entry.richNotes || entry.notes}
-              onSave={(notes) => updateRichNotes(entry.id, notes)}
-            />
-          </div> */}
         </div>
 
         {/* Interactive Rating (if finished) */}
@@ -155,9 +162,14 @@ export default function BookDetails() {
             />
           </div>
         </div>
-
       </div>
-    </div>
 
+      <BookForm
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        onSubmit={handleFormSubmit}
+        initialData={initialFormData}
+      />
+    </div>
   );
 }

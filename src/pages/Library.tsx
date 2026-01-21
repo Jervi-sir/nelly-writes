@@ -1,13 +1,30 @@
 import { useState, useEffect } from "react";
-import { useOutletContext, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import type { ReadingStatus } from "../data/mockLibrary";
 import { BookCard } from "../components/book-card";
-import type { LibraryContextType } from "../app";
-import { SortAsc, SortDesc } from "lucide-react";
+import { SortAsc, SortDesc, Plus } from "lucide-react";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { useLibrary } from "../hooks/use-library";
+import { BookForm } from "../components/book-form";
 
 export default function Library() {
-  const { books, library, updateStatus, updateRating, toggleOwned, openBookForm, deleteBook } = useOutletContext<LibraryContextType>();
+  const {
+    books,
+    library,
+    updateStatus,
+    updateRating,
+    toggleOwned,
+    openBookForm,
+    deleteBook,
+    isFormOpen,
+    setIsFormOpen,
+    handleFormSubmit,
+    initialFormData,
+    loading,
+    error
+  } = useLibrary();
+
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Filters State - Initialize from URL
@@ -25,6 +42,10 @@ export default function Library() {
 
     setSearchParams(params, { replace: true });
   }, [filterStatus, searchParams, setSearchParams]);
+
+  if (loading) {
+    return <div className="flex items-center justify-center p-12">Loading...</div>;
+  }
 
   // Filter Logic
   const filteredLibrary = library.filter((entry) => {
@@ -50,10 +71,16 @@ export default function Library() {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <header className="flex flex-col gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Library</h1>
-          <p className="text-muted-foreground">{filteredLibrary.length} books found</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Library</h1>
+            <p className="text-muted-foreground">{filteredLibrary.length} books found</p>
+          </div>
+          <Button onClick={() => openBookForm()} size="sm" className="gap-2 rounded-full">
+            <Plus size={16} /> Add Book
+          </Button>
         </div>
+        {error && <div className="text-red-500">{error}</div>}
 
         {/* Controls */}
         <div className="flex flex-wrap items-center gap-2">
@@ -96,7 +123,8 @@ export default function Library() {
 
       <div className="grid grid-cols-1 gap-6">
         {sortedLibrary.map((entry) => {
-          const book = books.find(b => b.id === entry.bookId)!;
+          const book = books.find(b => b.id === entry.bookId);
+          if (!book) return null; // Should not happen
           return (
             <BookCard
               key={entry.id}
@@ -116,6 +144,13 @@ export default function Library() {
           </div>
         )}
       </div>
+
+      <BookForm
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        onSubmit={handleFormSubmit}
+        initialData={initialFormData}
+      />
     </div>
   );
 }
