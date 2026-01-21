@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import type { ReadingStatus, LibraryBook, Book } from '../data/mockLibrary';
@@ -11,7 +10,9 @@ import {
   updateRating as apiUpdateRating,
   updateNotes as apiUpdateNotes,
   updateRichNotes as apiUpdateRichNotes,
-  updateDate as apiUpdateDate
+  updateDate as apiUpdateDate,
+  updateStatus as apiUpdateStatus,
+  updateOwnedStatus as apiUpdateOwnedStatus
 } from '../services/api';
 
 export function useLibrary() {
@@ -24,10 +25,10 @@ export function useLibrary() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (query?: string) => {
     try {
       setLoading(true);
-      const data = await fetchLibraryData();
+      const data = await fetchLibraryData(query);
 
       if (!data) {
         setBooks([]);
@@ -81,6 +82,10 @@ export function useLibrary() {
   }, [fetchData]);
 
   // Actions
+  const searchLibrary = useCallback((query: string) => {
+    fetchData(query);
+  }, [fetchData]);
+
   const updateStatus = async (id: string, newStatus: ReadingStatus) => {
     setError(null);
 
@@ -104,37 +109,9 @@ export function useLibrary() {
     }));
 
     try {
-      // We need the bookID, find it
       const entry = library.find(e => e.id === id);
       if (!entry) return;
-      // Assuming we have an API for status update or we use the generic update
-      // For now, I'll allow the UI update to persist in memory if we don't have a specific granular API for status ONLY without full form.
-      // But wait, App.tsx didn't call API for updateStatus?
-      // Checked App.tsx: updateStatus in App.tsx ONLY UPDATES LOCAL STATE! It does NOT call API!
-      // That seems like a bug in the previous implementation or intended to be saved later? 
-      // Wait, `updateRating` calls API. `updateNotes` calls API. `updateDate` calls API.
-      // `updateStatus` in App.tsx lines 121-150 DOES NOT call API. 
-
-      // I MUST FIX THIS. The user wants "each page their own function and queries...". 
-      // This implies working data persistence. 
-      // I will add API call for status update.
-
-      // Using `updateBookAndEntry` requires full form data.
-      // I can create a partial update API or use specific field update.
-      // `api.ts` has `updateRating`, `updateDate`, `updateNotes`.
-      // I should probably add `updateStatus` to `api.ts`.
-
-      // For now, I'll leave it as local-only if that was the state, BUT `updateBookAndEntry` is used by the form.
-      // If I change status via card dropdown (BookCard), I expect it to save.
-      // I will assume the user WANTS it to save.
-      // I'll add `updateStatus` to API in a subsequent step or try to use existing. 
-      // `api.ts` doesn't have `updateStatus`. I will add it.
-
-      const { updateStatus: apiTargetUpdateStatus } = await import('../services/api');
-      // I need to add this export to api.ts, or `updateBookAndEntry`?
-      // Let's rely on adding it to api.ts.
-      await apiTargetUpdateStatus(entry.bookId, newStatus);
-
+      await apiUpdateStatus(entry.bookId, newStatus);
     } catch (err) {
       console.error("Failed to update status:", err);
       setLibrary(previousLibrary); // Rollback
@@ -206,8 +183,6 @@ export function useLibrary() {
   };
 
   const toggleOwned = async (id: string) => {
-    // Check App.tsx, it didn't save toggleOwned to API either! 
-    // I need to add that.
     const entry = library.find(e => e.id === id);
     if (!entry) return;
 
@@ -223,10 +198,7 @@ export function useLibrary() {
     }));
 
     try {
-      // Since I need to update both Owned and Status, I'll need a new API method or use updateBookAndEntry (which is heavy).
-      // I'll create `updateOwnedStatus` in api.ts
-      const { updateOwnedStatus } = await import('../services/api');
-      await updateOwnedStatus(entry.bookId, newOwned, newStatus);
+      await apiUpdateOwnedStatus(entry.bookId, newOwned, newStatus);
     } catch (err) {
       console.error(err);
       // Revert...
@@ -295,6 +267,7 @@ export function useLibrary() {
     library,
     loading,
     error,
+    searchLibrary,
     updateStatus,
     updateRating,
     updateDate,

@@ -39,15 +39,21 @@ export const createBookAndEntry = async (
   }
 };
 
-export const fetchLibraryData = async () => {
-  const { data, error } = await supabase
+export const fetchLibraryData = async (searchQuery?: string) => {
+  let query = supabase
     .from('library')
     .select(`
       *,
-      book:books (
+      book:books${searchQuery ? '!inner' : ''} (
         *
       )
     `);
+
+  if (searchQuery) {
+    query = query.or(`title.ilike.%${searchQuery}%,author.ilike.%${searchQuery}%`, { foreignTable: 'book' });
+  }
+
+  const { data, error } = await query;
 
   if (error) throw error;
   return data;
@@ -87,13 +93,6 @@ export const updateBookAndEntry = async (
   if (data.status === 'finished' && !existingEntry.finishedAt) {
     updates.finished_at = new Date().toISOString().split("T")[0];
   }
-
-  // Handle case where status changes away from connection to dates? 
-  // Usually we keep the history, but if I reset 'finished' to 'reading', 
-  // maybe I want to keep 'finishedAt' as null or keep previous?
-  // Use logic from App.tsx:
-  // "If status changed to finished, set finishedAt if missing"
-  // It doesn't clear dates usually.
 
   const { error: libraryError } = await supabase
     .from("library")
